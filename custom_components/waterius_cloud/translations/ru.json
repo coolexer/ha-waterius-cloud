@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Ватериус: личный кабинет",
+        "description": "Введите токен доступа к account.waterius.ru. Как его получить — описано в README интеграции.",
+        "data": { "token": "Токен" }
+      },
+      "reauth_confirm": {
+        "title": "Токен Ватериус больше не работает",
+        "description": "Получите новый токен и введите его. Токен сбрасывается, если выйти из личного кабинета в браузере.",
+        "data": { "token": "Токен" }
+      }
+    },
+    "error": {
+      "invalid_auth": "Личный кабинет не принял токен",
+      "cannot_connect": "Не удалось связаться с account.waterius.ru",
+      "unknown": "Непредвиденная ошибка"
+    },
+    "abort": {
+      "already_configured": "Этот аккаунт Ватериус уже добавлен",
+      "reauth_successful": "Токен обновлён",
+      "wrong_account": "Этот токен принадлежит другому аккаунту Ватериус"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Настройки опроса",
+        "data": { "scan_interval_minutes": "Интервал опроса, минут" },
+        "data_description": {
+          "scan_interval_minutes": "Прибор выходит на связь раз в сутки, опрашивать облако чаще раза в час смысла нет."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": { "name": "Заряд батареи" },
+      "voltage": { "name": "Напряжение" },
+      "last_wakeup": { "name": "Последний выход на связь" }
+    },
+    "binary_sensor": {
+      "connectivity": { "name": "Связь" }
+    },
+    "button": {
+      "refresh": { "name": "Обновить сейчас" }
+    }
+  }
+}

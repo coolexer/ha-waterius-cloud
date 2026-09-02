@@ -1,0 +1,50 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Waterius cabinet",
+        "description": "Enter an access token for account.waterius.ru. See the integration README for how to obtain one.",
+        "data": { "token": "Token" }
+      },
+      "reauth_confirm": {
+        "title": "The Waterius token stopped working",
+        "description": "Obtain a new token and enter it. Signing out of the web cabinet resets the token.",
+        "data": { "token": "Token" }
+      }
+    },
+    "error": {
+      "invalid_auth": "The cabinet rejected the token",
+      "cannot_connect": "Cannot reach account.waterius.ru",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "This Waterius account is already configured",
+      "reauth_successful": "Token updated",
+      "wrong_account": "This token belongs to a different Waterius account"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Polling settings",
+        "data": { "scan_interval_minutes": "Scan interval, minutes" },
+        "data_description": {
+          "scan_interval_minutes": "The device wakes up once a day, so polling the cloud more often than hourly gains nothing."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": { "name": "Battery" },
+      "voltage": { "name": "Voltage" },
+      "last_wakeup": { "name": "Last seen" }
+    },
+    "binary_sensor": {
+      "connectivity": { "name": "Connectivity" }
+    },
+    "button": {
+      "refresh": { "name": "Refresh now" }
+    }
+  }
+}
