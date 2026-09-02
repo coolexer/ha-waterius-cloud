@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 DEVICE_CLASS_WATER = "water"
 DEVICE_CLASS_GAS = "gas"
@@ -163,9 +163,14 @@ def _parse_timestamp(raw: str | None) -> datetime | None:
     if not raw:
         return None
     try:
-        return datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        parsed = datetime.fromisoformat(raw.replace("Z", "+00:00"))
     except ValueError:
         return None
+    if parsed.tzinfo is None:
+        # Метка без смещения — считаем её UTC, иначе сравнение с aware-datetime
+        # в is_offline() и сенсор TIMESTAMP падают с исключением.
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def _parse_channel(raw: dict, source_id: int) -> WateriusChannel:

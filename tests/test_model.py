@@ -141,3 +141,13 @@ def test_device_without_last_wakeup_is_offline():
     device = model.parse_sources([{"id": 7}])[7]
 
     assert model.is_offline(device, datetime.now(timezone.utc)) is True
+
+
+def test_last_wakeup_without_an_offset_is_treated_as_utc():
+    device = model.parse_sources(
+        [{"id": 7, "last_wakeup": "2026-09-01T15:10:05"}]
+    )[7]
+
+    assert device.last_wakeup == datetime(2026, 9, 1, 15, 10, 5, tzinfo=timezone.utc)
+    # Раньше сравнение aware ``now`` с naive ``last_wakeup`` роняло TypeError.
+    assert model.is_offline(device, datetime.now(timezone.utc)) is False
