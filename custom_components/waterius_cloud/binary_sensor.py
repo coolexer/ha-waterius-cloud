@@ -52,10 +52,6 @@ class WateriusChannelProblem(WateriusDeviceEntity, BinarySensorEntity):
         super().__init__(coordinator, source_id)
         self._channel_id = channel_id
         self._attr_unique_id = f"channel_{channel_id}_problem"
-        device = self.device
-        channel = self.channel
-        if device is not None and channel is not None:
-            self._attr_name = f"{channel_display_name(channel, device)}: проблема"
 
     @property
     def channel(self) -> WateriusChannel | None:
@@ -63,6 +59,14 @@ class WateriusChannelProblem(WateriusDeviceEntity, BinarySensorEntity):
         if device is None:
             return None
         return device.channels.get(self._channel_id)
+
+    @property
+    def name(self) -> str | None:
+        device = self.device
+        channel = self.channel
+        if device is None or channel is None:
+            return None
+        return f"{channel_display_name(channel, device)}: проблема"
 
     @property
     def available(self) -> bool:

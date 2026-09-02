@@ -93,12 +93,15 @@ class WateriusChannelSensor(WateriusDeviceEntity, SensorEntity):
         super().__init__(coordinator, source_id)
         self._channel_id = channel_id
         self._attr_unique_id = f"channel_{channel_id}"
-        device = self.device
-        channel = self.channel
-        if device is not None and channel is not None:
-            self._attr_name = channel_display_name(channel, device)
-            self._attr_device_class = channel.kind.device_class
-            self._attr_native_unit_of_measurement = channel.kind.unit
+        # Пользователь может поменять data_type канала в кабинете (обычно сразу
+        # после привязки — по умолчанию канал заведён как тип 10 «Другой»). Имя,
+        # device_class и единица должны следовать за этим без перезапуска HA,
+        # поэтому они читаются заново каждый раз (см. свойства ниже), а не
+        # фиксируются здесь. Кэш нужен только для device_class/unit: вернуть
+        # None вместо реальной единицы на миг отсутствия канала сам по себе
+        # спровоцирует репэйр HA об изменении единицы у total_increasing.
+        self._cached_device_class: str | None = None
+        self._cached_unit: str | None = None
 
     @property
     def channel(self) -> WateriusChannel | None:
@@ -106,6 +109,28 @@ class WateriusChannelSensor(WateriusDeviceEntity, SensorEntity):
         if device is None:
             return None
         return device.channels.get(self._channel_id)
+
+    @property
+    def name(self) -> str | None:
+        device = self.device
+        channel = self.channel
+        if device is None or channel is None:
+            return None
+        return channel_display_name(channel, device)
+
+    @property
+    def device_class(self) -> str | None:
+        channel = self.channel
+        if channel is not None and channel.kind.device_class is not None:
+            self._cached_device_class = channel.kind.device_class
+        return self._cached_device_class
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        channel = self.channel
+        if channel is not None and channel.kind.unit is not None:
+            self._cached_unit = channel.kind.unit
+        return self._cached_unit
 
     @property
     def available(self) -> bool:
