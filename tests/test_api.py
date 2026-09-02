@@ -95,3 +95,27 @@ async def test_network_failure_raises_connection_error(session):
 
         with pytest.raises(api.WateriusConnectionError):
             await client.get_user()
+
+
+async def test_refresh_source_posts_to_the_update_endpoint(session):
+    with aioresponses() as mocked:
+        mocked.get(f"{BASE}/api/source/35488/update", payload={})
+        client = api.WateriusApi(session, "tok")
+
+        await client.refresh_source(35488)
+
+
+async def test_refresh_source_reports_the_cooldown(session):
+    with aioresponses() as mocked:
+        mocked.get(
+            f"{BASE}/api/source/35488/update",
+            status=429,
+            headers={"Retry-After": "45"},
+            payload={"message": "Подождите"},
+        )
+        client = api.WateriusApi(session, "tok")
+
+        with pytest.raises(api.WateriusRateLimitError) as excinfo:
+            await client.refresh_source(35488)
+
+        assert excinfo.value.retry_after == 45

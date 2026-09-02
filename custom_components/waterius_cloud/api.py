@@ -104,3 +104,11 @@ class WateriusApi:
             sources.extend(payload.get("results") or [])
             url = payload.get("next")
         return sources
+
+    async def refresh_source(self, source_id: int) -> None:
+        """Попросить облако обновить данные прибора.
+
+        Кабинет дёргает этот эндпоинт методом GET и ограничивает частоту:
+        повторный вызов раньше кулдауна возвращает 429.
+        """
+        await self._request("GET", f"{self._base_url}/api/source/{source_id}/update")
