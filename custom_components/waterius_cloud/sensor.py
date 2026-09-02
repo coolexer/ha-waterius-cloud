@@ -156,6 +156,7 @@ class WateriusChannelSensor(WateriusDeviceEntity, SensorEntity):
             "number": channel.number,
             "service_date": channel.service_date,
             "info": channel.info,
+            "manual_last_value": channel.manual_last_value,
         }
 
 

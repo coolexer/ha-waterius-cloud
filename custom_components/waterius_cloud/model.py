@@ -107,6 +107,7 @@ class WateriusChannel:
     number: int
     last_value: float | None
     is_work: bool
+    manual_last_value: bool = False
     warnings: list[str] = field(default_factory=list)
     monthly_diff: float | None = None
     monthly_limit: float | None = None
@@ -181,6 +182,7 @@ def _parse_channel(raw: dict, source_id: int) -> WateriusChannel:
         number=int(raw.get("number") or 0),
         last_value=raw.get("last_value"),
         is_work=bool(raw.get("is_work", True)),
+        manual_last_value=bool(raw.get("manual_last_value", False)),
         warnings=list(raw.get("warnings") or []),
         monthly_diff=raw.get("monthly_diff"),
         monthly_limit=raw.get("monthly_limit"),

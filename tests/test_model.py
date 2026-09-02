@@ -90,6 +90,10 @@ def test_parse_sources_builds_channel_index(sources_payload):
     assert hot.factor == 10
     assert hot.source_id == 35488
     assert hot.has_problem is False
+    assert hot.manual_last_value is True
+
+    cold = device.channels[69839]
+    assert cold.manual_last_value is False
 
 
 def test_channel_with_warnings_reports_a_problem(sources_payload):

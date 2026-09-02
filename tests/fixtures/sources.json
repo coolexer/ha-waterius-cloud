@@ -38,7 +38,7 @@
           "is_work": true,
           "warnings": [],
           "info": "0.52 м³",
-          "manual_last_value": false,
+          "manual_last_value": true,
           "monthly_limit": 25.0,
           "factor": 10,
           "counter_id": "",
