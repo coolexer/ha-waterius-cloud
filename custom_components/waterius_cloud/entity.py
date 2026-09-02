@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import WateriusCoordinator
-from .model import WateriusDevice
+from .model import WateriusChannel, WateriusDevice
 
 
 class WateriusDeviceEntity(CoordinatorEntity[WateriusCoordinator]):
@@ -48,6 +48,21 @@ class WateriusDeviceEntity(CoordinatorEntity[WateriusCoordinator]):
             if device.mac:
                 info["connections"] = {(CONNECTION_NETWORK_MAC, device.mac)}
         return info
+
+
+def channel_display_name(channel: WateriusChannel, device: WateriusDevice) -> str:
+    """Имя канала.
+
+    Если на приборе несколько каналов одного ``data_type`` (например, два входа
+    холодной воды), к имени добавляется номер канала — иначе они неразличимы в
+    списке сущностей. Единственный канал такого типа остаётся без номера.
+    """
+    same_type = sum(
+        1 for other in device.channels.values() if other.data_type == channel.data_type
+    )
+    if same_type > 1:
+        return f"{channel.name} {channel.number + 1}"
+    return channel.name
 
 
 @callback

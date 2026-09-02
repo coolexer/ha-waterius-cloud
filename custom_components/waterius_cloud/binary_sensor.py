@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import WateriusConfigEntry, WateriusCoordinator
-from .entity import WateriusDeviceEntity, async_setup_dynamic_entities
+from .entity import WateriusDeviceEntity, async_setup_dynamic_entities, channel_display_name
 from .model import WateriusChannel, WateriusDevice, is_offline
 
 
@@ -52,9 +52,10 @@ class WateriusChannelProblem(WateriusDeviceEntity, BinarySensorEntity):
         super().__init__(coordinator, source_id)
         self._channel_id = channel_id
         self._attr_unique_id = f"channel_{channel_id}_problem"
+        device = self.device
         channel = self.channel
-        if channel is not None:
-            self._attr_name = f"{channel.name}: проблема"
+        if device is not None and channel is not None:
+            self._attr_name = f"{channel_display_name(channel, device)}: проблема"
 
     @property
     def channel(self) -> WateriusChannel | None:

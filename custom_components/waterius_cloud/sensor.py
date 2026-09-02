@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import WateriusConfigEntry, WateriusCoordinator
-from .entity import WateriusDeviceEntity, async_setup_dynamic_entities
+from .entity import WateriusDeviceEntity, async_setup_dynamic_entities, channel_display_name
 from .model import WateriusChannel, WateriusDevice
 
 
@@ -93,9 +93,10 @@ class WateriusChannelSensor(WateriusDeviceEntity, SensorEntity):
         super().__init__(coordinator, source_id)
         self._channel_id = channel_id
         self._attr_unique_id = f"channel_{channel_id}"
+        device = self.device
         channel = self.channel
-        if channel is not None:
-            self._attr_name = channel.name
+        if device is not None and channel is not None:
+            self._attr_name = channel_display_name(channel, device)
             self._attr_device_class = channel.kind.device_class
             self._attr_native_unit_of_measurement = channel.kind.unit
 
