@@ -97,12 +97,30 @@ async def test_network_failure_raises_connection_error(session):
             await client.get_user()
 
 
-async def test_refresh_source_posts_to_the_update_endpoint(session):
+async def test_refresh_source_gets_the_update_endpoint(session):
     with aioresponses() as mocked:
         mocked.get(f"{BASE}/api/source/35488/update", payload={})
         client = api.WateriusApi(session, "tok")
 
         await client.refresh_source(35488)
+
+
+async def test_get_sources_rejects_a_non_dict_payload(session):
+    with aioresponses() as mocked:
+        mocked.get(f"{BASE}/api/source/?page=1", payload=["oops"])
+        client = api.WateriusApi(session, "tok")
+
+        with pytest.raises(api.WateriusConnectionError):
+            await client.get_sources()
+
+
+async def test_get_sources_rejects_an_empty_body(session):
+    with aioresponses() as mocked:
+        mocked.get(f"{BASE}/api/source/?page=1", status=204)
+        client = api.WateriusApi(session, "tok")
+
+        with pytest.raises(api.WateriusConnectionError):
+            await client.get_sources()
 
 
 async def test_refresh_source_reports_the_cooldown(session):

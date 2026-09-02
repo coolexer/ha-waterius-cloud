@@ -57,4 +57,7 @@ class WateriusCoordinator(DataUpdateCoordinator[dict[int, WateriusDevice]]):
         except (WateriusRateLimitError, WateriusConnectionError) as err:
             raise UpdateFailed(str(err)) from err
 
-        return parse_sources(sources)
+        try:
+            return parse_sources(sources)
+        except (KeyError, TypeError, ValueError) as err:
+            raise UpdateFailed(f"Облако Ватериус вернуло некорректные данные: {err}") from err

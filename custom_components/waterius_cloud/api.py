@@ -101,6 +101,10 @@ class WateriusApi:
         sources: list[dict] = []
         while url:
             payload = await self._request("GET", url)
+            if not isinstance(payload, dict):
+                raise WateriusConnectionError(
+                    "Облако Ватериус вернуло пустой или неожиданный ответ"
+                )
             sources.extend(payload.get("results") or [])
             url = payload.get("next")
         return sources
