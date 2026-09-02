@@ -9,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .api import WateriusError, WateriusRateLimitError
+from .api import WateriusAuthError, WateriusError, WateriusRateLimitError
 from .coordinator import WateriusConfigEntry, WateriusCoordinator
 from .entity import WateriusDeviceEntity, async_setup_dynamic_entities
 from .model import WateriusDevice
@@ -55,6 +55,14 @@ class WateriusRefreshButton(WateriusDeviceEntity, ButtonEntity):
         """Дёрнуть обновление и сразу перечитать данные."""
         try:
             await self.coordinator.api.refresh_source(self._source_id)
+        except WateriusAuthError as err:
+            # ConfigEntryAuthFailed поднятое из сервисного вызова реаутентификацию
+            # не запускает (это работает только из async_setup_entry), поэтому
+            # запускаем её явно.
+            self.coordinator.entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                "Облако Ватериус отклонило токен. Запрошена повторная авторизация."
+            ) from err
         except WateriusRateLimitError as err:
             wait = f" Подождите {err.retry_after} с." if err.retry_after else ""
             raise HomeAssistantError(
