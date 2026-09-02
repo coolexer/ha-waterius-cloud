@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import callback
@@ -115,8 +115,16 @@ class WateriusConfigFlow(ConfigFlow, domain=DOMAIN):
         return WateriusOptionsFlow()
 
 
-class WateriusOptionsFlow(OptionsFlow):
-    """Настройка интервала опроса."""
+class WateriusOptionsFlow(OptionsFlowWithReload):
+    """Настройка интервала опроса.
+
+    ``OptionsFlowWithReload`` перезагружает запись сама при изменённых опциях —
+    без обработчика ``add_update_listener`` в ``__init__.py``, который вместе с
+    ``async_update_reload_and_abort`` в реаутентификации приводил к двойной
+    перезагрузке и депрекейшену HA (``async_update_reload_and_abort`` считает
+    запись с зарегистрированным слушателем ошибкой конфигурации и планирует
+    перезагрузку сама, а слушатель делает то же самое ещё раз).
+    """
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
