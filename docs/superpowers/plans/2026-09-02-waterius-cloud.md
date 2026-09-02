@@ -31,7 +31,24 @@
 | `custom_components/waterius_cloud/strings.json`, `translations/{en,ru}.json` | Тексты config flow и имена сущностей |
 | `custom_components/waterius_cloud/manifest.json`, `hacs.json` | Метаданные интеграции и HACS |
 | `tests/fixtures/sources.json` | Обезличенный реальный ответ `/api/source/` + синтетические каналы всех 16 типов |
-| `tests/test_model.py`, `tests/test_api.py`, `tests/test_config_flow.py`, `tests/test_entities.py` | Тесты |
+| `tests/test_model.py`, `tests/test_api.py`, `tests/test_ha_constants.py` | Тесты слоёв, не зависящих от Home Assistant |
+
+## Решение по тестам, принятое при исполнении (2026-09-02)
+
+`pytest-homeassistant-custom-component` не работает на Windows: он автоматически подгружается
+в любой запуск pytest и импортирует `homeassistant.runner`, который делает `import fcntl` —
+модуль, которого на Windows нет. WSL на машине есть, но без `pip` и `python3-venv`, а `sudo`
+требует пароль.
+
+Владелец проекта решил не заводить тестовое окружение с Home Assistant. Следствия:
+
+- Тестами покрыты `model.py` и `api.py` — то есть весь разбор данных и весь HTTP.
+- Config flow и платформы сущностей тестами **не** покрыты. Их корректность проверяется
+  вручную на живом Home Assistant в Task 16, и поэтому Task 16 обязательна, а не факультативна.
+- `pytest-homeassistant-custom-component` из `requirements_test.txt` убирается — без него
+  `pytest` работает на Windows без дополнительных флагов.
+- `homeassistant` в зависимостях остаётся: он нужен `tests/test_ha_constants.py`, который
+  сверяет строковые литералы из `model.py` с константами Home Assistant.
 
 `entity.py` в спеке отдельно не назван — он появляется здесь, потому что device_info, проверка доступности и логика динамического добавления одинаковы для трёх платформ, и дублировать их трижды было бы хуже.
 
@@ -1187,6 +1204,12 @@ git commit -m "feat: add update coordinator and entry setup"
 
 ### Task 8: Config flow — добавление аккаунта
 
+> **Отменено при исполнении:** Steps 1–3 и Step 5 (создание `tests/conftest.py`,
+> `tests/test_config_flow.py` и их прогон) не выполняются — см. «Решение по тестам».
+> Выполняются только Step 4 (создать `config_flow.py`) и Step 6 (коммит).
+> Тестовый код в Steps 1–2 оставлен в документе как описание ожидаемого поведения:
+> из него видно, какие `unique_id`, заголовок записи и коды ошибок должен давать flow.
+
 **Files:**
 - Create: `custom_components/waterius_cloud/config_flow.py`
 - Create: `tests/conftest.py`
@@ -1411,6 +1434,10 @@ git commit -m "feat: add config flow for entering the cabinet token"
 ---
 
 ### Task 9: Config flow — reauth и настройки
+
+> **Отменено при исполнении:** Steps 1, 2 и 4 (тесты и их прогон) не выполняются.
+> Выполняются Step 3 (дописать `config_flow.py`) и Step 5 (коммит).
+> Тестовый код оставлен как описание ожидаемого поведения.
 
 **Files:**
 - Modify: `custom_components/waterius_cloud/config_flow.py`
@@ -1717,6 +1744,10 @@ git commit -m "feat: add entity base class and dynamic entity setup helper"
 
 ### Task 11: Сенсоры показаний и диагностики
 
+> **Отменено при исполнении:** Steps 1, 2 и 4 (создание `tests/test_entities.py` и прогон)
+> не выполняются. Выполняются Step 3 (создать `sensor.py`) и Step 5 (коммит).
+> Ожидания из тестового кода переносятся в ручную проверку Task 16.
+
 **Files:**
 - Create: `custom_components/waterius_cloud/sensor.py`
 - Create: `tests/test_entities.py`
@@ -1981,6 +2012,11 @@ git commit -m "feat: publish channel readings and device diagnostics as sensors"
 
 ### Task 12: Бинарные сенсоры
 
+> **Отменено при исполнении:** Steps 1, 2 и 4 (тесты и прогон) не выполняются.
+> Выполняются Step 3 (создать `binary_sensor.py`) и Step 5 (коммит).
+> Правка фикстуры со свежим `last_wakeup`, описанная в Step 1, не нужна:
+> она требовалась только тестам.
+
 **Files:**
 - Create: `custom_components/waterius_cloud/binary_sensor.py`
 - Modify: `tests/test_entities.py`
@@ -2157,6 +2193,9 @@ git commit -m "feat: add channel problem and device connectivity binary sensors"
 ---
 
 ### Task 13: Кнопка принудительного обновления
+
+> **Отменено при исполнении:** Steps 1, 2 и 4 (тесты и прогон) не выполняются.
+> Выполняются Step 3 (создать `button.py`) и Step 5 (коммит).
 
 **Files:**
 - Create: `custom_components/waterius_cloud/button.py`
@@ -2624,6 +2663,25 @@ logger:
 Expected: создаётся устройство «ваш прибор» и сущности — два сенсора показаний
 (Горячая вода 0.52, Холодная вода 0.66), три диагностических сенсора, два `problem`,
 один `connectivity`, одна неактивная кнопка.
+
+Поскольку config flow и платформы сущностей тестами не покрыты, этот шаг проверяет их
+вместо тестов. Пройти надо весь список:
+
+- Показания: «Горячая вода» = 0.52, «Холодная вода» = 0.66, единица м³, у обеих
+  в атрибутах есть `monthly_limit` (25 и 50), `factor` = 10, `number` (0 и 1)
+- Обе сущности показаний имеют `state_class: total_increasing` и видны в «Энергия →
+  Потребление воды» при добавлении
+- Диагностика: заряд 88 %, напряжение 3.144 В, последний выход на связь непустой
+- `connectivity` = «Подключено», кнопка «Обновить сейчас» — недоступна (`can_refresh: false`)
+- Оба `problem` — «ОК»
+- Устройство показывает версию прошивки `1.1.20-32` и MAC
+- Повторное добавление той же интеграции с тем же токеном отклоняется
+  с «Аккаунт уже настроен»
+- Изменение интервала опроса в настройках интеграции применяется без ошибок
+  и перезагружает запись
+- Reauth: временно испортить токен в `.storage/core.config_entries` при остановленном
+  Home Assistant, запустить, убедиться, что появилось «Требуется повторная
+  аутентификация», и вернуть верный токен через диалог
 
 - [ ] **Step 4: Проверить журнал**
 
