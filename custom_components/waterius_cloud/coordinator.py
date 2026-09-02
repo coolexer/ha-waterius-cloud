@@ -54,7 +54,9 @@ class WateriusCoordinator(DataUpdateCoordinator[dict[int, WateriusDevice]]):
             sources = await self.api.get_sources()
         except WateriusAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
-        except (WateriusRateLimitError, WateriusConnectionError) as err:
+        except WateriusRateLimitError as err:
+            raise UpdateFailed(str(err), retry_after=err.retry_after) from err
+        except WateriusConnectionError as err:
             raise UpdateFailed(str(err)) from err
 
         try:
